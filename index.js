@@ -13,9 +13,29 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+var admin = require("firebase-admin");
+
+var serviceAccount = "./firebase-adminsdk.json";
+
+admin.initializeApp({
+	credential: admin.credential.cert(serviceAccount),
+});
+
 //MongoDB linking
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@book-readers-acc.xrofl.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
+
+//Verify with user token
+async function verifyToken(req, res, next) {
+	if (req.headers?.authorization?.startsWith("Bearer ")) {
+		const token = req.headers.authorization.split(" ")[1];
+		try {
+			const decodedUser = await admin.auth().verifyIdToken(token);
+			req.decodedEmail = decodedUser?.email;
+		} catch {}
+	}
+	next();
+}
 
 async function run() {
 	try {
@@ -105,6 +125,38 @@ async function run() {
 			);
 			res.json(result);
 			console.log("Successfully replaced or added user", result);
+		});
+		//To update or replace users role
+		app.put("/users/pageRole", verifyToken, async (req, res) => {
+			const user = req.body;
+			console.log("Decoded email", req.decodedEmail);
+			const requester = req.decodedEmail;
+			if (requester) {
+				const requesterAccount = await usersCollection.findOne({
+					email: requester,
+				});
+				if (requesterAccount.userRole === "Admin") {
+					const filter = { email: user?.email };
+					console.log("Request to replace or add Role", user);
+					const options = { upsert: true };
+					const updateuser = {
+						$set: {
+							userRole: user?.userRole,
+						},
+					};
+					const result = await usersCollection.updateOne(
+						filter,
+						updateuser,
+						options,
+					);
+					res.json(result);
+					console.log("Successfully replaced or added user", result);
+				} else {
+					res
+						.status(403)
+						.json({ message: "You don't have access to make new Admin" });
+				}
+			}
 		});
 		/* ------
         ------post all
