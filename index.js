@@ -84,6 +84,7 @@ async function run() {
 			res.send(result);
 			console.log("Found one", result);
 		});
+		//To update single user data
 		app.put("/users/updateUsers", async (req, res) => {
 			console.log(req.body);
 			const user = req.body;
@@ -157,7 +158,18 @@ async function run() {
 			res.send(reviews);
 			console.log("Found all reviews", reviews);
 		});
-		//To Show all Blogs
+		//To load reviews data by bookId
+		app.get("/reviews", async (req, res) => {
+			const user = req.query;
+			console.log("user", user);
+			const filter = { bookId: user?.bookId };
+			console.log("from UI", filter);
+			console.log("Request to find ", filter);
+			const result = await reviewsCollection.findOne(filter);
+			res.send(result);
+			console.log("Found one", result);
+		});
+		//To Show all books
 		app.get("/books", async (req, res) => {
 			console.log(req.query);
 			const get = booksCollection.find({});
@@ -165,6 +177,15 @@ async function run() {
 			books = await get.toArray();
 			res.send(books);
 			console.log("Found all books", books);
+		});
+		//To load books by id
+		app.get("/books/:id", async (req, res) => {
+			const id = req.params.id;
+			console.log("Request to find ", id);
+			const findId = { _id: ObjectId(id) };
+			const result = await booksCollection.findOne(findId);
+			res.send(result);
+			console.log("Found one", result);
 		});
 		//To Show all mails
 		app.get("/mails", async (req, res) => {
@@ -207,7 +228,7 @@ async function run() {
 			res.send(result);
 			console.log("mails Successfully Deleted", result);
 		});
-		//To Delete mails one by one
+		//To Delete books one by one
 		app.delete("/books/:id", async (req, res) => {
 			const id = req.params.id;
 			console.log("Request to delete ", id);
