@@ -158,6 +158,16 @@ async function run() {
 			res.send(reviews);
 			console.log("Found all reviews", reviews);
 		});
+		//To load reviews data by email
+		app.get("/reviewsbyemail", async (req, res) => {
+			const user = req.query;
+			console.log("user", user);
+			const result = await reviewsCollection
+				.find({ userEmail: user?.email })
+				.toArray();
+			res.send(result);
+			console.log("Found one", result);
+		});
 		//To load reviews data by bookId
 		app.get("/reviewss", async (req, res) => {
 			const user = req.query;
