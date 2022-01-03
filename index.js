@@ -159,16 +159,16 @@ async function run() {
 			console.log("Found all reviews", reviews);
 		});
 		//To load reviews data by bookId
-		app.get("/reviews", async (req, res) => {
+		app.get("/reviewss", async (req, res) => {
 			const user = req.query;
 			console.log("user", user);
-			const filter = { bookId: user?.bookId };
-			console.log("from UI", filter);
-			console.log("Request to find ", filter);
-			const result = await reviewsCollection.findOne(filter);
+			const result = await reviewsCollection
+				.find({ bookId: user?.bookId })
+				.toArray();
 			res.send(result);
 			console.log("Found one", result);
 		});
+
 		//To Show all books
 		app.get("/books", async (req, res) => {
 			console.log(req.query);
